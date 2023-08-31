@@ -1,0 +1,14 @@
+---
+- name: Save ipv6 firewall
+  community.general.iptables_state:
+    ip_version: ipv6
+    path: /etc/iptables/rules.v6
+    state: saved
+  when: firewall_persist
+
+- name: Save ipv4 firewall
+  community.general.iptables_state:
+    ip_version: ipv4
+    path: /etc/sysconfig/iptables
+    state: saved
+  when: firewall_persist

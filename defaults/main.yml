@@ -1,0 +1,18 @@
+---
+firewall_additional_rules: []
+# - action: insert
+#   chain: INPUT
+#   comment: "Allow HTTPS communication from 192.168.0.0/24 network"
+#   ctstate: NEW
+#   destination_port: 443
+#   jump: ACCEPT
+#   protocol: tcp
+#   source: "192.168.0.0/24"
+firewall_allowed_tcp_ports:
+  - 22
+firewall_allowed_udp_ports: []
+firewall_flush_rules_and_chains: true
+firewall_input_policy: DROP
+firewall_forward_policy: ACCEPT
+firewall_output_policy: ACCEPT
+firewall_persist: true

@@ -1,0 +1,4 @@
+---
+firewall_ip_version:
+  - ipv4
+  - ipv6

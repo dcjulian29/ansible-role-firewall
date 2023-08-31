@@ -1,0 +1,11 @@
+---
+- name: Ensure iptables is present.
+  ansible.builtin.package:
+    name: iptables
+    state: present
+
+- name: "{{ 'Configure ' + item + ' firewall' }}"
+  ansible.builtin.include_tasks: firewall.yml
+  with_items: "{{ firewall_ip_version[0] if ansible_default_ipv6 | length > 0 else firewall_ip_version }}"
+  loop_control:
+    loop_var: ipversion_item

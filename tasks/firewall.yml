@@ -1,0 +1,117 @@
+---
+- name: Flush iptables default chains and tables if needed
+  ansible.builtin.iptables:
+    flush: true
+    ip_version: "{{ ipversion_item }}"
+    table: "{{ item }}"
+  with_items:
+    - filter
+    - nat
+    - mangle
+  when: firewall_flush_rules_and_chains
+
+- name: Ensure traffic from the loopback interface is accepted.
+  ansible.builtin.iptables:
+    chain: INPUT
+    in_interface: lo
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+  notify: "Save {{ ipversion_item }} firewall"
+
+- name: Ensure ICMP protocol works.
+  ansible.builtin.iptables:
+    chain: INPUT
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+    protocol: icmp
+  notify: "Save {{ ipversion_item }} firewall"
+
+- name: Ensure NTP communication to this server works.
+  ansible.builtin.iptables:
+    chain: INPUT
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+    source_port: 123
+    protocol: udp
+  notify: "Save {{ ipversion_item }} firewall"
+
+- name: Ensure NTP communication from this server works.
+  ansible.builtin.iptables:
+    chain: OUTPUT
+    destination_port: 123
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+    protocol: udp
+  notify: "Save {{ ipversion_item }} firewall"
+
+- name: Allow related and established connections.
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+  notify: "Save {{ ipversion_item }} firewall"
+
+- name: Allow new incoming packets on allowed TCP port.
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: NEW
+    destination_port: "{{ item }}"
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+    protocol: tcp
+    syn: match
+  notify: "Save {{ ipversion_item }} firewall"
+  with_items: "{{ firewall_allowed_tcp_ports }}"
+
+- name: Allow new incoming packets on allowed UDP port.
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: NEW
+    destination_port: "{{ item }}"
+    ip_version: "{{ ipversion_item }}"
+    jump: ACCEPT
+    protocol: udp
+  notify: "Save {{ ipversion_item }} firewall"
+  with_items: "{{ firewall_allowed_udp_ports }}"
+
+- name: Ensure additional rules are added if specified.
+  ansible.builtin.iptables:
+    action: "{{ item.action | default(append) }}"
+    chain: "{{ item.chain }}"
+    comment: "{{ item.comment | default(ansible_managed) }}"
+    ctstate: "{{ item.ctstate | default('[]') }}"
+    destination: "{{ item.destination | default(omit) }}"
+    destination_port: "{{ item.destination_port | default(omit) }}"
+    goto: "{{ item.goto | default(omit) }}"
+    ip_version: "{{ ipversion_item }}"
+    jump: "{{ item.jump | default(omit) }}"
+    limit: "{{ item.limit | default(omit) }}"
+    limit_burst: "{{ item.limit_burst | default(omit) }}"
+    log_level: "{{ item.log_level | default(omit) }}"
+    log_prefix: "{{ item.log_prefix | default(omit) }}"
+    match: "{{ item.match | default('[]') }}"
+    match_set: "{{ item.match_set | default(omit) }}"
+    match_set_flags: "{{ item.match_set_flags | default(omit) }}"
+    protocol: "{{ item.protocol | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    source_port: "{{ item.source_port | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+    table: "{{ item.table | default('filter') }}"
+  notify: "Save {{ ipversion_item }} firewall"
+  with_items: "{{ firewall_additional_rules }}"
+  when: firewall_additional_rules | length > 0
+
+- name: Set the policy for default chains in the filter table.
+  ansible.builtin.iptables:
+    chain: "{{ item.chain }}"
+    ip_version: "{{ ipversion_item }}"
+    policy: "{{ item.policy }}"
+  notify: "Save {{ ipversion_item }} firewall"
+  with_items:
+    - chain: INPUT
+      policy: "{{ firewall_input_policy }}"
+    - chain: FORWARD
+      policy: "{{ firewall_forward_policy }}"
+    - chain: OUTPUT
+      policy: "{{ firewall_output_policy }}"
