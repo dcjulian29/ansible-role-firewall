@@ -8,8 +8,13 @@ firewall_additional_rules: []
 #   jump: ACCEPT
 #   protocol: tcp
 #   source: "192.168.0.0/24"
-firewall_allowed_tcp_ports:
-  - 22
+firewall_allow_icmp: true
+firewall_allow_ntp: true
+firewall_allow_ssh: true
+firewall_allowed_ssh_port: 22
+firewall_allowed_tcp_ports: []
+  # - 80
+  # - 443
 firewall_allowed_udp_ports: []
 firewall_flush_rules_and_chains: true
 firewall_input_policy: DROP
