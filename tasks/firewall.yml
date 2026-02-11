@@ -93,7 +93,7 @@
   ansible.builtin.iptables:
     action: "{{ item.action | default(append) }}"
     chain: "{{ item.chain }}"
-    comment: "{{ item.comment | default(ansible_managed) }}"
+    comment: "{{ item.comment | default(ansible_facts['managed']) }}"
     ctstate: "{{ item.ctstate | default('[]') }}"
     destination: "{{ item.destination | default(omit) }}"
     destination_port: "{{ item.destination_port | default(omit) }}"
